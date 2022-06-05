@@ -10,7 +10,7 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
  */
 let scoot
 const modelLoader = new GLTFLoader()
-const scooter = modelLoader.load('/tier-scooter/source/Scooter.glb',(gltf)=>{
+const scooter = modelLoader.load('./tier-scooter/source/Scooter.glb',(gltf)=>{
     scoot = gltf.scene
     scene.add(gltf.scene)
     gltf.scene.traverse((mesh)=>{
