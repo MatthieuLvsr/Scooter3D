@@ -20,6 +20,17 @@ const scooter = modelLoader.load('./tier-scooter/source/Scooter.glb',(gltf)=>{
 })
 
 /**
+ * Textures
+ */
+const textureLoader = new THREE.TextureLoader()
+const metal_ao = textureLoader.load('./textures/Metal_Panels_ambientOcclusion.jpg')
+const metal_color = textureLoader.load('./textures/Metal_Panels_basecolor.jpg')
+const metal_height = textureLoader.load('./textures/Metal_Panels_height.png')
+const metal_metallic = textureLoader.load('./textures/Metal_Panels_metallic.jpg')
+const metal_normal = textureLoader.load('./textures/Metal_Panels_normal.jpg')
+const metal_roughness = textureLoader.load('./textures/Metal_Panels_roughness.jpg')
+
+/**
  * Debug
  */
 const gui = new dat.GUI({closed: true})
@@ -60,20 +71,59 @@ place.rotation.x = 0
 place.position.y = -0.01
 place.rotation.x = - Math.PI /2
 place.receiveShadow = true
-scene.add(place)
+// scene.add(place)
+const cylinderGeometry = new THREE.CylinderBufferGeometry(1.8,1.8,0.2,64,32)
+cylinderGeometry.setAttribute('uv2',new THREE.Float32BufferAttribute(cylinderGeometry.attributes.uv.array, 2))
+const cylinderMaterial = new THREE.MeshStandardMaterial()
+cylinderMaterial.map = metal_color
+cylinderMaterial.normalMap = metal_normal
+cylinderMaterial.roughnessMap = metal_roughness
+cylinderMaterial.metalnessMap = metal_metallic
+cylinderMaterial.displacementMap = metal_height
+cylinderMaterial.displacementScale = 0.01
+cylinderMaterial.aoMap = metal_ao
+const cylinder = new THREE.Mesh(
+    cylinderGeometry,
+    cylinderMaterial
+)
+cylinder.receiveShadow = true
+cylinder.position.y = - 0.1
+// gui.add(cylinder.position,'y')
+scene.add(cylinder)
 
 // Spheres
-const sphereGeometry = new THREE.SphereBufferGeometry(0.02,16,16)
-const sphereMaterial = new THREE.MeshBasicMaterial()
+parameters.rayon = 0.055
 
-const sphere1 = new THREE.Mesh(sphereGeometry,sphereMaterial)
-sphere1.position.set(1.51,1.51,0.39)
-const sphere2 = new THREE.Mesh(sphereGeometry,sphereMaterial)
-sphere2.position.set(-0.9,0.5,0.39)
-const sphere3 = new THREE.Mesh(sphereGeometry,sphereMaterial)
-sphere3.position.set(-0.51,1.51,0)
-const sphere4 = new THREE.Mesh(sphereGeometry,sphereMaterial)
-sphere4.position.set(1.17,0.5,-0.4)
+let sphere1 = null
+let sphere2 = null
+let sphere3 = null
+let sphere4 = null
+
+const updateSpheres = () => 
+{
+    if(sphere1 != null)
+    {
+        scene.remove(sphere1,sphere2,sphere3,sphere4)
+    }
+    const sphereGeometry = new THREE.SphereBufferGeometry(parameters.rayon,16,16)
+    const sphereMaterial = new THREE.MeshBasicMaterial()
+    sphere1 = new THREE.Mesh(sphereGeometry,sphereMaterial)
+    sphere1.position.set(1.51,1.51,0.39)
+    sphere2 = new THREE.Mesh(sphereGeometry,sphereMaterial)
+    sphere2.position.set(-1,0.5,0.39)
+    sphere3 = new THREE.Mesh(sphereGeometry,sphereMaterial)
+    sphere3.position.set(-0.51,1.51,0)
+    sphere4 = new THREE.Mesh(sphereGeometry,sphereMaterial)
+    sphere4.position.set(1.17,0.5,-0.4)
+    scene.add(sphere1,sphere2,sphere3,sphere4)
+}
+
+updateSpheres()
+
+gui.add(parameters,'rayon').min(0).max(0.5).step(0.001).onFinishChange(()=>{
+    updateSpheres()
+})
+
 // const sphere5 = new THREE.Mesh(sphereGeometry,sphereMaterial)
 
 const spheres = gui.addFolder("Spheres")
@@ -94,7 +144,6 @@ sphereFolder4.add(sphere4.position,'x').min(-5).max(5).step(0.01)
 sphereFolder4.add(sphere4.position,'y').min(-5).max(5).step(0.01)
 sphereFolder4.add(sphere4.position,'z').min(-5).max(5).step(0.01)
 
-scene.add(sphere1,sphere2,sphere3,sphere4)
 
 /**
  * Mouse
@@ -211,6 +260,13 @@ parameters.go1 = ()=>
             duration:2,
             ease:'power3.inOut'
         })
+    const sections = document.getElementsByClassName('section-active')
+    for(const section of sections)
+    {
+        section.classList.remove('section-active')
+    }
+    const activeSection = document.querySelector('.section1')
+    activeSection.classList.add('section-active')
 }
 gui.add(parameters,'go1')
 
@@ -232,6 +288,13 @@ parameters.go2 = ()=>
             duration:2,
             ease:'power3.inOut'
         })
+    const sections = document.getElementsByClassName('section-active')
+    for(const section of sections)
+    {
+        section.classList.remove('section-active')
+    }
+    const activeSection = document.querySelector('.section2')
+    activeSection.classList.add('section-active')
 }
 gui.add(parameters,'go2')
 
@@ -253,6 +316,13 @@ parameters.go3 = ()=>
             duration:2,
             ease:'power3.inOut'
         })
+    const sections = document.getElementsByClassName('section-active')
+    for(const section of sections)
+    {
+        section.classList.remove('section-active')
+    }
+    const activeSection = document.querySelector('.section3')
+    activeSection.classList.add('section-active')
 }
 gui.add(parameters,'go3')
 
@@ -274,6 +344,13 @@ parameters.go4 = ()=>
             duration:2,
             ease:'power3.inOut'
         })
+    const sections = document.getElementsByClassName('section-active')
+    for(const section of sections)
+    {
+        section.classList.remove('section-active')
+    }
+    const activeSection = document.querySelector('.section4')
+    activeSection.classList.add('section-active')
 }
 gui.add(parameters,'go4')
 
@@ -300,6 +377,7 @@ window.addEventListener('click',()=>
 {
     if(currentIntersect != null)
     {
+        console.log(currentIntersect.objet);
         switch(currentIntersect.object)
         {
             case sphere1:
@@ -350,7 +428,7 @@ const tick = () =>
         {
             if(currentIntersect === null)
             {
-                console.log('mouse enter');
+                // console.log('mouse enter');
             }
             currentIntersect = intersects[0]
         }
@@ -358,7 +436,7 @@ const tick = () =>
         {
             if(currentIntersect)
             {
-                console.log('mouse leave');
+                // console.log('mouse leave');
             }
             currentIntersect = null
         }
